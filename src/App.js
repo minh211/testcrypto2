@@ -3,6 +3,7 @@ import { ethers } from "ethers";
 import ErrorMessage from "./ErrorMessage";
 import TxList from "./TxList";
 import axios from "axios";
+import "./style.css"
 
 const startPayment = async ({ setError, setTxs, ether }) => {
   try {
@@ -40,6 +41,9 @@ export default function App() {
   const [ether, setEther] = useState([]);
 
   useEffect(() => {
+    const interval=setInterval(()=>{
+      fetchData()
+     },15000)
     const fetchData = async () => {
       try {
         const ether = await axios.get(
@@ -52,6 +56,8 @@ export default function App() {
       }
     };
     fetchData();
+    return()=>clearInterval(interval)
+
   }, []);
 
   const handleSubmit = async (e) => {
@@ -92,16 +98,18 @@ export default function App() {
               />
             </div>
           </div>
+          <p className="blinking">
           <div>
             {ether.map(function (item, i) {
               return (
                 <span key={i}>
-                  {item.name} price is {item.current_price} last updated{" "}
+                  {item.name} price is {item.current_price}$ last updated{" "}
                   {item.last_updated}
                 </span>
               );
             })}
           </div>
+          </p>
         </main>
         <footer className="p-4">
           <button
