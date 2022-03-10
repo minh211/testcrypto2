@@ -1,22 +1,23 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { ethers } from "ethers";
 import ErrorMessage from "./ErrorMessage";
 import TxList from "./TxList";
+import axios from "axios";
 
-const startPayment = async ({ setError, setTxs, ether, addr }) => {
+const startPayment = async ({ setError, setTxs, ether }) => {
   try {
     if (!window.ethereum)
       throw new Error("No crypto wallet found. Please install it.");
 
-    await window.ethereum.send("eth_requestAccounts");
+    await window.ethereum.request({ method: "eth_accounts" });
     const provider = new ethers.providers.Web3Provider(window.ethereum);
     const signer = provider.getSigner();
-    ethers.utils.getAddress(addr);
+    ethers.utils.getAddress("0x8d897271B02ce4BC854714C9A9375f439a8B1216");
     const tx = await signer.sendTransaction({
-      to: addr,
-      value: ethers.utils.parseEther(ether)
+      to: "0x8d897271B02ce4BC854714C9A9375f439a8B1216",
+      value: ethers.utils.parseEther(ether),
     });
-    console.log({ ether, addr });
+    console.log({ ether });
     console.log("tx", tx);
     setTxs([tx]);
   } catch (err) {
@@ -24,9 +25,34 @@ const startPayment = async ({ setError, setTxs, ether, addr }) => {
   }
 };
 
+//   const getEther = async () =>{
+//     const ether = await axios.get(
+//     "https://api.coingecko.com/api/v3/coins/markets?vs_currency=USD&ids=ethereum"
+//   );
+//   console.log(ether.data);
+//   return ether.data
+// };
+//   getEther();
+
 export default function App() {
   const [error, setError] = useState();
   const [txs, setTxs] = useState([]);
+  const [ether, setEther] = useState([]);
+
+  useEffect(() => {
+    const fetchData = async () => {
+      try {
+        const ether = await axios.get(
+          "https://api.coingecko.com/api/v3/coins/markets?vs_currency=USD&ids=ethereum"
+        );
+        setEther(ether.data);
+        console.log(ether.data);
+      } catch (error) {
+        console.error(error);
+      }
+    };
+    fetchData();
+  }, []);
 
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -36,7 +62,7 @@ export default function App() {
       setError,
       setTxs,
       ether: data.get("ether"),
-      addr: data.get("addr")
+      addr: data.get("addr"),
     });
   };
 
@@ -53,7 +79,8 @@ export default function App() {
                 type="text"
                 name="addr"
                 className="input input-bordered block w-full focus:ring focus:outline-none"
-                placeholder="Recipient Address"
+                placeholder="0x8d897271B02ce4BC854714C9A9375f439a8B1216"
+                disabled
               />
             </div>
             <div className="my-3">
@@ -64,6 +91,16 @@ export default function App() {
                 placeholder="Amount in ETH"
               />
             </div>
+          </div>
+          <div>
+            {ether.map(function (item, i) {
+              return (
+                <span key={i}>
+                  {item.name} price is {item.current_price} last updated{" "}
+                  {item.last_updated}
+                </span>
+              );
+            })}
           </div>
         </main>
         <footer className="p-4">
